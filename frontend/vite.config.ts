@@ -11,4 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      // Proxy requests to /auth to your NestJS backend
+      '/auth': {
+        target: 'http://localhost:3000', // Your NestJS server
+        changeOrigin: true,
+      },
+    }
+  }
 })

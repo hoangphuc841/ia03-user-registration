@@ -1,66 +1,138 @@
 // src/pages/Login.tsx
-import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { useMutation } from "@tanstack/react-query"
+
 import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
   CardDescription,
-  // 1. Remove CardFooter, we'll put the button in the form
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 
+// 1. Define Validation Schema
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  password: z.string().min(1, {
+    message: "Password is required.",
+  }),
+})
+
+type LoginData = z.infer<typeof formSchema>
+
+// 2. Define the API call function
+async function loginUser(data: LoginData) {
+  const response = await fetch('/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.message || 'Invalid email or password.')
+  }
+
+  // This will return { access_token: "..." }
+  return response.json()
+}
+
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
+  // 3. Define your form
+  const form = useForm<LoginData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    setTimeout(() => {
-      setIsLoading(false)
+  // 4. Set up React Query Mutation
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data: { access_token: string }) => {
       toast.success("Login Successful", {
         description: "You are now being redirected.",
       })
-    }, 1500)
+      // You would typically save the token and redirect here
+      console.log("Access Token:", data.access_token)
+      // Example: localStorage.setItem('token', data.access_token);
+      // Example: navigate('/dashboard');
+      form.reset()
+    },
+    onError: (error) => {
+      toast.error("Login Failed", {
+        description: error.message,
+      })
+    },
+  })
+
+  // 5. Define a submit handler
+  function onSubmit(values: LoginData) {
+    mutation.mutate(values)
   }
 
   return (
     <div className="flex justify-center items-center pt-16">
       <Card className="w-full max-w-sm">
-        {/* 2. The CardHeader stays outside the form */}
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
             Enter your credentials to access your account.
           </CardDescription>
         </CardHeader>
-
-        {/* 3. Move the <form> inside CardContent and give it the spacing */}
         <CardContent>
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                required
+          {/* 6. Use the new Form component */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="name@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
-            </div>
-
-            {/* 4. Move the Button inside the form and remove CardFooter */}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={mutation.isPending}>
+                {mutation.isPending ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

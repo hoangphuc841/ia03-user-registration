@@ -22,10 +22,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-// 1. Change the import from useToast to toast
 import { toast } from "sonner"
 
-// 1. Define Validation Schema
+// 1. Define Validation Schema (No change)
 const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
@@ -35,28 +34,31 @@ const formSchema = z.object({
   }),
 })
 
-// Define the API call function
-async function registerUser(data: z.infer<typeof formSchema>) {
-  // Simulate a POST request
-  console.log("Sending data to /user/register", data)
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Simulate a random success/error
-      if (Math.random() > 0.2) {
-        resolve({ success: true, message: "User registered successfully!" })
-      } else {
-        reject(new Error("An error occurred. Please try again."))
-      }
-    }, 1500)
+type RegisterData = z.infer<typeof formSchema>
+
+// 2. Update the API call function
+async function registerUser(data: RegisterData) {
+  const response = await fetch('/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   })
+
+  if (!response.ok) {
+    // NestJS sends error details in JSON format
+    const errorData = await response.json()
+    throw new Error(errorData.message || 'An error occurred. Please try again.')
+  }
+
+  return response.json()
 }
 
 
 export default function RegisterPage() {
-  // 2. Remove the useToast() hook
-
-  // 2. Define your form.
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Define your form (No change)
+  const form = useForm<RegisterData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -64,29 +66,28 @@ export default function RegisterPage() {
     },
   })
 
-  // 3. Set up React Query Mutation
+  // Set up React Query Mutation (No change)
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data: any) => {
-      // 3. Update the success toast call
       toast.success("Success!", {
-        description: data.message,
+        description: "User registered successfully! You can now log in.",
       })
       form.reset()
     },
     onError: (error) => {
-      // 4. Update the error toast call (variant: "destructive" becomes toast.error)
       toast.error("Error!", {
         description: error.message,
       })
     },
   })
 
-  // 4. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  // Define a submit handler (No change)
+  function onSubmit(values: RegisterData) {
     mutation.mutate(values)
   }
 
+  // Return JSX (No change)
   return (
     <div className="flex justify-center items-center pt-16">
       <Card className="w-full max-w-sm">

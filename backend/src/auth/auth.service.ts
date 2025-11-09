@@ -29,7 +29,8 @@ export class AuthService {
         const isMatch = user ? await bcrypt.compare(pass, user.hash_password) : false;
         
         if (!isMatch) {
-            throw new UnauthorizedException();
+            // 👇 Change this line
+            throw new UnauthorizedException('Invalid email or password');
         }
         
         const authenticatedUser = user!;
