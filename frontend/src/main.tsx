@@ -10,6 +10,9 @@ import HomePage from './pages/Home.tsx'
 import LoginPage from './pages/Login.tsx'
 import RegisterPage from './pages/Register.tsx'
 
+import { AuthProvider } from './contexts/AuthContext' 
+import { PublicOnlyRoute } from './components/PublicOnlyRoute.tsx' 
+
 // Create a client
 const queryClient = new QueryClient()
 
@@ -19,16 +22,34 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: '/', element: <HomePage /> },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
+      // 3. Wrap login and register routes
+      { 
+        path: '/login', 
+        element: (
+          <PublicOnlyRoute>
+            <LoginPage />
+          </PublicOnlyRoute>
+        ) 
+      },
+      { 
+        path: '/register', 
+        element: (
+          <PublicOnlyRoute>
+            <RegisterPage />
+          </PublicOnlyRoute>
+        ) 
+      },
     ],
   },
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    {/* 4. Wrap the app in the AuthProvider */}
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </AuthProvider>
   </StrictMode>,
 )

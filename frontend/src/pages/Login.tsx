@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useMutation } from "@tanstack/react-query"
+import { useNavigate } from 'react-router-dom' 
+import { useAuth } from '@/contexts/AuthContext' 
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,12 +34,11 @@ const formSchema = z.object({
     message: "Password is required.",
   }),
 })
-
 type LoginData = z.infer<typeof formSchema>
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// 2. Define the API call function
+// ... (loginUser API function is unchanged)
 async function loginUser(data: LoginData) {
   const response = await fetch(`${API_URL}/auth/login`,{
     method: 'POST',
@@ -51,13 +52,14 @@ async function loginUser(data: LoginData) {
     const errorData = await response.json()
     throw new Error(errorData.message || 'Invalid email or password.')
   }
-
-  // This will return { access_token: "..." }
   return response.json()
 }
 
 export default function LoginPage() {
-  // 3. Define your form
+  const navigate = useNavigate(); // <-- 3. Get navigate function
+  const { login } = useAuth(); // <-- 4. Get login from context
+
+  // ... (form definition is unchanged)
   const form = useForm<LoginData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,18 +68,19 @@ export default function LoginPage() {
     },
   })
 
-  // 4. Set up React Query Mutation
+  // 5. Update mutation
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data: { access_token: string }) => {
+      // 6. Call context login function
+      login(data.access_token);
+      
       toast.success("Login Successful", {
         description: "You are now being redirected.",
       })
-      // You would typically save the token and redirect here
-      console.log("Access Token:", data.access_token)
-      // Example: localStorage.setItem('token', data.access_token);
-      // Example: navigate('/dashboard');
-      form.reset()
+      
+      // 7. Redirect to home page
+      navigate('/');
     },
     onError: (error) => {
       toast.error("Login Failed", {
@@ -86,13 +89,14 @@ export default function LoginPage() {
     },
   })
 
-  // 5. Define a submit handler
+  // ... (onSubmit and JSX return are unchanged)
   function onSubmit(values: LoginData) {
     mutation.mutate(values)
   }
 
   return (
     <div className="flex justify-center items-center pt-16">
+      {/* ... (rest of the JSX) */}
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -101,7 +105,6 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 6. Use the new Form component */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
