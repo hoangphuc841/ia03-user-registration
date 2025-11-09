@@ -71,7 +71,7 @@ export default function RegisterPage() {
   // Set up React Query Mutation (No change)
   const mutation = useMutation({
     mutationFn: registerUser,
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       toast.success("Success!", {
         description: "User registered successfully! You can now log in.",
       })

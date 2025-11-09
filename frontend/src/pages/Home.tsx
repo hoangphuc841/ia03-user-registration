@@ -18,7 +18,7 @@ export default function HomePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>You have successfully set up the application with:</p>
+          <p>A simple user registration system</p>
           <ul className="list-disc pl-5 mt-2 text-sm text-muted-foreground">
             <li>React Router DOM for routing</li>
             <li>shadcn/ui for components</li>
