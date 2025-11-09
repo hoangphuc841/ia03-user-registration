@@ -35,9 +35,11 @@ const formSchema = z.object({
 
 type LoginData = z.infer<typeof formSchema>
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // 2. Define the API call function
 async function loginUser(data: LoginData) {
-  const response = await fetch('/auth/login', {
+  const response = await fetch(`${API_URL}/auth/login`,{
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

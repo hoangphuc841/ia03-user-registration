@@ -36,9 +36,11 @@ const formSchema = z.object({
 
 type RegisterData = z.infer<typeof formSchema>
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // 2. Update the API call function
 async function registerUser(data: RegisterData) {
-  const response = await fetch('/auth/register', {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
