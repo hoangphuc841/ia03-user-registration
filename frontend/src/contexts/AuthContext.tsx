@@ -1,22 +1,41 @@
-// src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { refreshAuthToken } from '@/lib/api'
 
 interface User {
   email: string;
   sub: string;
 }
 
+interface LoginData {
+  access_token: string;
+  refresh_token: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (token: string) => void;
+  login: (data: LoginData) => void;
   logout: () => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function decodeToken(token: string): User | null {
+  try {
+    const decoded: User & { exp: number } = jwtDecode(token);
+    // Check if token is expired
+    if (decoded.exp * 1000 > Date.now()) {
+      return decoded;
+    }
+    return null; // Token is expired
+  } catch (error) {
+    console.error("Failed to decode token", error);
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -24,40 +43,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for a token in localStorage when the app loads
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
+    (async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+
       try {
-        const decoded: User & { exp: number } = jwtDecode(storedToken);
-        // Check if token is expired
-        if (decoded.exp * 1000 > Date.now()) {
-          setUser(decoded);
-          setToken(storedToken);
-        } else {
-          // Token is expired
-          localStorage.removeItem('token');
+        if (storedToken) {
+          const decodedUser = decodeToken(storedToken);
+          if (decodedUser) {
+            // Case 1: Valid
+            setUser(decodedUser);
+            setToken(storedToken);
+          } else if (storedRefreshToken) {
+            // Case 2: Expired, use new function
+            const newAccessToken = await refreshAuthToken(storedRefreshToken);
+            const newDecodedUser = decodeToken(newAccessToken);
+            if (newDecodedUser) {
+              setUser(newDecodedUser);
+              setToken(newAccessToken);
+            }
+          } else {
+            // Case 3: Expired, no refresh
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+          }
         }
       } catch (error) {
-        console.error("Failed to decode token", error);
+        // Case 5: Refresh failed
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        setUser(null);
+        setToken(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    })();
+
+    // Add storage event listener
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token') {
+        const newToken = e.newValue;
+        if (newToken) {
+          const decodedUser = decodeToken(newToken);
+          if (decodedUser) {
+            setUser(decodedUser);
+            setToken(newToken);
+          }
+        } else {
+          // Token was removed (logout from another tab or interceptor)
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem('refreshToken'); // Ensure refresh token is also cleared
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
-  const login = (newToken: string) => {
-    try {
-      const decoded: User = jwtDecode(newToken);
-      localStorage.setItem('token', newToken);
-      setUser(decoded);
-      setToken(newToken);
-    } catch (error) {
-      console.error("Failed to decode token on login", error);
+  const login = (data: LoginData) => {
+    const decodedUser = decodeToken(data.access_token);
+    if (decodedUser) {
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('refreshToken', data.refresh_token);
+      setUser(decodedUser);
+      setToken(data.access_token);
+    } else {
+      console.error("Failed to decode token on login");
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     setUser(null);
     setToken(null);
   };

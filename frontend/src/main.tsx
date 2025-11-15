@@ -9,9 +9,12 @@ import App from './App.tsx'
 import HomePage from './pages/Home.tsx'
 import LoginPage from './pages/Login.tsx'
 import RegisterPage from './pages/Register.tsx'
+import GamePage from './pages/GamePage.tsx'
+import Profile from './pages/Profile.tsx'
 
 import { AuthProvider } from './contexts/AuthContext' 
 import { PublicOnlyRoute } from './components/PublicOnlyRoute.tsx' 
+import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -38,6 +41,22 @@ const router = createBrowserRouter([
             <RegisterPage />
           </PublicOnlyRoute>
         ) 
+      },
+      {
+        path: '/game',
+        element: (
+          <ProtectedRoute>
+            <GamePage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        )
       },
     ],
   },

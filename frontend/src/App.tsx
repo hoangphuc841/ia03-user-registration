@@ -22,9 +22,12 @@ function App() {
             ) : user ? (
               // User is Logged In
               <>
-                <span className="text-sm font-medium text-muted-foreground">
+                <Link to="/game" className="text-sm font-medium text-muted-foreground hover:text-primary">
+                  Play Game
+                </Link>
+                <Link to="/profile" className="text-sm font-medium text-muted-foreground hover:text-primary">
                   {user.email}
-                </span>
+                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 

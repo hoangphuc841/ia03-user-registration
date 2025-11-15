@@ -1,9 +1,7 @@
-// src/pages/Register.tsx
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useMutation } from "@tanstack/react-query"
-
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -23,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { toast } from "sonner"
+import api from '@/lib/api'
 
 // 1. Define Validation Schema (No change)
 const formSchema = z.object({
@@ -36,27 +35,12 @@ const formSchema = z.object({
 
 type RegisterData = z.infer<typeof formSchema>
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 // 2. Update the API call function
 async function registerUser(data: RegisterData) {
-  const response = await fetch(`${API_URL}/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    // NestJS sends error details in JSON format
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'An error occurred. Please try again.')
-  }
-
-  return response.json()
+  // Use the 'api' instance
+  const response = await api.post('/auth/register', data)
+  return response.data
 }
-
 
 export default function RegisterPage() {
   // Define your form (No change)
@@ -68,7 +52,7 @@ export default function RegisterPage() {
     },
   })
 
-  // Set up React Query Mutation (No change)
+  // Set up React Query Mutation
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
@@ -77,19 +61,19 @@ export default function RegisterPage() {
       })
       form.reset()
     },
-    onError: (error) => {
+    onError: (error: any) => { 
+      const message = error.response?.data?.message || error.message || "Registration Failed";
       toast.error("Error!", {
-        description: error.message,
+        description: message,
       })
     },
   })
 
-  // Define a submit handler (No change)
+  // Define a submit handler
   function onSubmit(values: RegisterData) {
     mutation.mutate(values)
   }
 
-  // Return JSX (No change)
   return (
     <div className="flex justify-center items-center pt-16">
       <Card className="w-full max-w-sm">

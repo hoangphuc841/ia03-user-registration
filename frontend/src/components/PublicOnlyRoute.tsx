@@ -7,7 +7,6 @@ export function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    // You can replace this with a proper loading spinner
     return <div>Loading...</div>;
   }
 
