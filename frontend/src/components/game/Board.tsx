@@ -53,7 +53,7 @@ export default function Board({ xIsNext, squares, onPlay }: BoardProps) {
       );
     }
     boardRows.push(
-      // Use flex to replace the old float/clearfix logic
+      // Use flex to arrange squares in a row
       <div key={row} className="flex">
         {squares_row}
       </div>
@@ -62,7 +62,6 @@ export default function Board({ xIsNext, squares, onPlay }: BoardProps) {
 
   return (
     <>
-      {/* Add Tailwind classes for the status */}
       <div className="mb-2.5 text-lg font-semibold">{status}</div>
       {boardRows}
     </>

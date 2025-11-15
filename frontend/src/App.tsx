@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext' // <-- 1. Import useAuth
 import { Button } from '@/components/ui/button' // <-- 2. Import Button
 
 function App() {
-  // 3. Get auth state
+  // Get auth state
   const { user, logout, isLoading } = useAuth();
 
   return (
@@ -16,7 +16,7 @@ function App() {
             User Registration System
           </Link>
           <div className="flex gap-4 items-center">
-            {/* 4. Main auth logic for navbar */}
+            {/*  Main auth logic for navbar */}
             {isLoading ? (
               <div className="h-9 w-24 rounded-md animate-pulse bg-muted"></div>
             ) : user ? (

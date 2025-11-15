@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: '/', element: <HomePage /> },
-      // 3. Wrap login and register routes
+      // Wrap login and register routes
       { 
         path: '/login', 
         element: (
@@ -64,7 +64,6 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {/* 4. Wrap the app in the AuthProvider */}
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
