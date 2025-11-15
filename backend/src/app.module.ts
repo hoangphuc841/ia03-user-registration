@@ -22,9 +22,9 @@ import { User } from './users/user.entity';
       entities: [User],
       synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
       logging: process.env.TYPEORM_LOGGING === 'true',
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ssl: process.env.DATABASE_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : false,
     }),
     AuthModule,
     UsersModule,

@@ -25,8 +25,29 @@ export class UsersService {
 	async findOneByEmailForAuth(email: string): Promise<User | null> {
         return await this.usersRepo
             .createQueryBuilder('user')
-            .addSelect('user.hash_password')
+            .addSelect(['user.hash_password', 'user.hashedRefreshToken'])
             .where('user.email = :email', { email })
+            .getOne();
+    }
+
+    async updateRefreshToken(userId: string, refreshToken: string | null) {
+        let hashedRefreshToken: string | null = null;
+        
+        if (refreshToken) {
+            const salt = await bcrypt.genSalt();
+            hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+        }
+
+        await this.usersRepo.update(userId, {
+            hashedRefreshToken: hashedRefreshToken
+        });
+    }
+
+    async findOneById(id: string): Promise<User | null> {
+        return await this.usersRepo
+            .createQueryBuilder('user')
+            .addSelect('user.hashedRefreshToken')
+            .where('user.id = :id', { id })
             .getOne();
     }
 }
