@@ -1,12 +1,27 @@
 // src/App.tsx
-import { Outlet, Link } from 'react-router-dom'
+import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { Toaster } from "@/components/ui/sonner"
-import { useAuth } from '@/contexts/AuthContext' // <-- 1. Import useAuth
-import { Button } from '@/components/ui/button' // <-- 2. Import Button
+import { useAuth } from '@/contexts/AuthContext' 
+import { Button } from '@/components/ui/button' 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 function App() {
   // Get auth state
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, sessionExpired, clearSessionExpired } = useAuth();
+  const navigate = useNavigate();
+
+  function handleSessionExpired() {
+    clearSessionExpired(); // Reset the state
+    navigate('/login');    // Redirect to login
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,6 +74,21 @@ function App() {
       </main>
       
       <Toaster />
+      <AlertDialog open={sessionExpired}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Session Expired</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your session has expired. Please log in again to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleSessionExpired}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

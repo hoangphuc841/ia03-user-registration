@@ -19,6 +19,8 @@ interface AuthContextType {
   login: (data: LoginData) => void;
   logout: () => void;
   isLoading: boolean;
+  sessionExpired: boolean;
+  clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('refreshToken');
         setUser(null);
         setToken(null);
+        setSessionExpired(true);
       } finally {
         setIsLoading(false);
       }
@@ -122,10 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('refreshToken');
     setUser(null);
     setToken(null);
+    setSessionExpired(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, sessionExpired, clearSessionExpired: () => setSessionExpired(false) }}>
       {children}
     </AuthContext.Provider>
   );
